@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>D3 Bar Chart</title>
+
+        <style>
+            body
+            {
+                font-size: 12px;
+                font-family: arial;
+            }
+
+            .barDashboard
+            {
+                height: 2em;
+                width: 100%;
+                text-align: center;
+            }
+
+            .barChart
+            {
+                outline: 1px solid #000000;
+            }
+
+            .barChartContainer
+            {
+                margin: 0 auto 0 auto;
+            }
+
+            .barScaleSvg
+            {
+                width: 5em;
+                float: left;
+                background-color: rgba(0, 255, 0, 0);
+            }
+
+            .barScaleSvg text
+            {
+                fill: rgba(0, 0, 0, 1);
+                font-size: 0.5em;
+            } 
+
+            .barChartSvg
+            {
+                float: left;
+                background-color: rgba(0, 0, 255, 0);
+            }
+
+            .barChartSvg text
+            {
+                fill: rgba(0, 0, 0, 1);
+                text-anchor: middle;
+                font-weight: bold;
+            }  
+
+            .barFillerSvg
+            {
+                width: 5em;
+                height: 3em;
+                float: left;
+                background-color: rgba(0, 0, 0, 0);
+            }
+
+            .barLegendSvg
+            {
+                height: 3em;
+                float: left;
+                background-color: rgba(150, 0, 0, 0);
+            }
+
+            .barLegendSvg text
+            {
+                fill: rgba(0, 0, 0, 1);
+                text-anchor: middle;
+                font-weight: bold;
+            }  
+
+            .barChartData
+            {
+                fill: rgba(255, 0, 0, 1);
+            } 
+
+            .barChartDataMean
+            {
+                stroke: rgba(0, 0, 0, 1);
+                stroke-width: 1px;
+                stroke-dasharray: 1, 5;
+            }  
+
+            .barChartLine
+            {
+                stroke: rgba(0, 0, 0, 1);
+                stroke-width: 1px;
+            }         
+        </style>
+
+        <script src="https://d3js.org/d3.v3.min.js"></script>
+    </head>
+
+    <body>
+        <div class="barChartContainer">
+            <div class="barDashboard">
+                <select id="ddlYear">
+                    <option value="2015" selected>2015</option>
+                    <option value="2016">2016</option>
+                    <option value="2017">2017</option>
+                    <option value="2018">2018</option>
+                </select>
+
+                <select id="ddlStat">
+                    <option value="goals" selected>goals</option>
+                    <option value="appearances">appearances</option>
+                </select>
+            </div>
+
+            <div class="barChart">
+                <svg class="barScaleSvg">
+
+                </svg>
+
+                <svg class="barChartSvg">
+
+                </svg>
+
+                <br style="clear:both"/>
+
+                <svg class="barFillerSvg">
+
+                </svg>
+
+                <svg class="barLegendSvg">
+
+                </svg>
+            </div>
+        </div>
+
+        <script>
+        var graphData = 
+        {
+            "cols":
+            [
+                {
+                    "title": "Adam Lallana",
+                    "stats": 
+                    [
+                        {"year": 2015, "goals": 4, "appearances": 30},
+                        {"year": 2016, "goals": 8, "appearances": 31},
+                        {"year": 2017, "goals": 0, "appearances": 12},
+                        {"year": 2018, "goals": 0, "appearances": 13}
+                    ]
+                },
+                {
+                    "title": "Sadio Mané",
+                    "stats": 
+                    [
+                        {"year": 2016, "goals": 13, "appearances": 27},
+                        {"year": 2017, "goals": 10, "appearances": 29},
+                        {"year": 2018, "goals": 22, "appearances": 36}
+                    ]
+                },
+                {
+                    "title": "Roberto Firminho",
+                    "stats": 
+                    [
+                        {"year": 2015, "goals": 10, "appearances": 31},
+                        {"year": 2016, "goals": 11, "appearances": 35},
+                        {"year": 2017, "goals": 15, "appearances": 37},
+                        {"year": 2018, "goals": 12, "appearances": 34}
+                    ]
+                },
+                {
+                    "title": "Divock Origi",
+                    "stats": 
+                    [
+                        {"year": 2015, "goals": 5, "appearances": 16},
+                        {"year": 2016, "goals": 7, "appearances": 34},
+                        {"year": 2017, "goals": 0, "appearances": 1},
+                        {"year": 2018, "goals": 3, "appearances": 12}
+                    ]
+                },
+                {
+                    "title": "Daniel Sturridge",
+                    "stats": 
+                    [
+                        {"year": 2015, "goals": 8, "appearances": 14},
+                        {"year": 2016, "goals": 3, "appearances": 20},
+                        {"year": 2017, "goals": 2, "appearances": 9},
+                        {"year": 2018, "goals": 2, "appearances": 18}
+                    ]
+                },
+                {
+                    "title": "James Milner",
+                    "stats": 
+                    [
+                        {"year": 2015, "goals": 5, "appearances": 28},
+                        {"year": 2016, "goals": 7, "appearances": 36},
+                        {"year": 2017, "goals": 0, "appearances": 32},
+                        {"year": 2018, "goals": 5, "appearances": 31}
+                    ]
+                },
+            ],
+            "rows": [2015, 2016, 2017, 2018],
+            "stats": ["goals", "appearances"]
+        }; 
+
+        var config = 
+        {
+            "scale": 0.8,
+            "dataWidth": 10,
+            "dataSpacing": 1,
+            "max": 0,
+            "mean": 0,
+            "getChartHeight": function()
+            {
+                return (this.max * this.scale * 1.5);
+            },
+            "getChartWidth": function(datalength)
+            {
+                return (datalength * (this.dataWidth + this.dataSpacing)) + (datalength * 0.5);
+            },
+            "setData": function ()
+            {
+                var year = d3.select("#ddlYear")[0][0].value;
+                var stat = d3.select("#ddlStat")[0][0].value;
+
+                var dataSet = 
+                {
+                  "labels": [],
+                  "stats": []
+                };
+
+                for (var i = 0; i < graphData.cols.length; i++)
+                {
+                    var filtered = graphData.cols[i].stats.filter(function(x) { return x.year == year;})
+
+                    if (filtered.length > 0)
+                    {
+                      dataSet.labels.push(graphData.cols[i].title);
+                      dataSet.stats.push(filtered[0][stat]);
+                    }
+                }
+
+                config.mean = d3.mean(dataSet.stats, function(d) { return d; });
+
+                var container = d3.select(".barChartContainer");
+                var wrapper = d3.select(".barChart");
+                var scale = d3.select(".barScaleSvg");
+                var chart = d3.select(".barChartSvg");
+                var legend = d3.select(".barLegendSvg");
+
+                var height = config.getChartHeight();
+                var width = config.getChartWidth(graphData.cols.length);
+
+                container
+                .style("width", function(d) 
+                {
+                    return (width + 5) + "em";
+                });
+
+                wrapper
+                .style("height", function(d) 
+                {
+                    return (height + 2) + "em";
+                }); 
+
+                legend
+                .style("width", function(d) 
+                {
+                    return width + "em";
+                }) 
+                .html(""); 
+
+                chart
+                .style("height", function(d) 
+                {
+                    return height + "em";
+                })
+                .style("width", function(d) 
+                {
+                    return width + "em";
+                }) 
+                .html("");
+
+                scale
+                .style("height", function(d) 
+                {
+                    return height + "em";
+                })
+                .html("");
+
+                chart.selectAll("rect")
+                .data(dataSet.stats)
+                .enter()
+                .append("rect")
+                .attr("class", "barChartData")
+                .attr("width", function(d) 
+                {
+                    return (config.dataWidth) + "em";
+                })
+                .attr("x", function(d, i) 
+                {
+                    return ((i * (config.dataWidth + config.dataSpacing)) + 2) + "em";
+                })
+                .attr("y", function(d) 
+                {
+                    return height + "em";
+                })
+                .transition()
+                .duration(500)
+                .attr("y", function(d) 
+                {
+                    return (height - (d * config.scale)) + "em";
+                })
+                .attr("height", function(d) 
+                {
+                    return (d * config.scale) + "em";
+                });
+
+                chart.selectAll("text")
+                .data(dataSet.stats)
+                .enter()
+                .append("text")
+                .attr("class", "barChartDataText")
+                .attr("x", function(d, i) 
+                {
+                    return ((i * (config.dataWidth + config.dataSpacing)) + 2 + (config.dataWidth / 2)) + "em";
+                })
+                .attr("y", function(d) 
+                {
+                    return (height - (d * config.scale) - 1) + "em";
+                })
+                .text(function(d) 
+                {
+                    return d;
+                });
+
+                chart
+                .append("line")
+                .attr("class", "barChartDataMean")
+                .attr("x1", function(d) 
+                {
+                    return "0em";
+                })
+                .attr("y1", function(d) 
+                {
+                    return (height - (config.mean * config.scale)) + "em";
+                })
+                .attr("x2", function(d) 
+                {
+                    return width + "em";
+                })
+                .attr("y2", function(d) 
+                {
+                    return (height - (config.mean * config.scale)) + "em";
+                });
+
+                legend
+                .append("line")
+                .attr("class", "barChartLine")
+                .attr("x1", function(d) 
+                {
+                    return "0em";
+                })
+                .attr("y1", function(d) 
+                {
+                    return "0em";
+                })
+                .attr("x2", function(d) 
+                {
+                    return width + "em";
+                })
+                .attr("y2", function(d) 
+                {
+                    return "0em";
+                });
+
+                legend.selectAll("text")
+                .data(dataSet.labels)
+                .enter()
+                .append("text")
+                .attr("class", "barChartDataText")
+                .attr("x", function(d, i) 
+                {
+                    return ((i * (config.dataWidth + config.dataSpacing)) + 2 + (config.dataWidth / 2)) + "em";
+                })
+                .attr("y", function(d) 
+                {
+                    return config.dataSpacing + "em";
+                })
+                .text(function(d) 
+                {
+                    return d;
+                });
+
+                scale
+                .append("line")
+                .attr("class", "barChartLine")
+                .attr("x1", function(d) 
+                {
+                    return "5em";
+                })
+                .attr("y1", function(d) 
+                {
+                    return "0em";
+                })
+                .attr("x2", function(d) 
+                {
+                    return "5em";
+                })
+                .attr("y2", function(d) 
+                {
+                    return height + "em";
+                });
+
+                var scaleData = [];
+                var unitGrouping = 2;
+                if (config.max > 10) unitGrouping = 5;
+                if (config.max > 20) unitGrouping = 10;
+
+                for (var i = 0; i < (config.max * 1.5); i += unitGrouping)
+                {
+                    scaleData.push(i);
+                }
+
+                scale.selectAll("line")
+                .data(scaleData)
+                .enter()
+                .append("line")
+                .attr("class", "barChartLine")
+                .attr("x1", function(d) 
+                {
+                    return "4em";
+                })
+                .attr("y1", function(d) 
+                {
+                    return (height - (d * config.scale)) + "em";
+                })
+                .attr("x2", function(d) 
+                {
+                    return "5em";
+                })
+                .attr("y2", function(d) 
+                {
+                    return (height - (d * config.scale)) + "em";
+                });
+
+                scale.selectAll("text")
+                .data(scaleData)
+                .enter()
+                .append("text")
+                .attr("class", "barChartDataText")
+                .attr("x", function(d) 
+                {
+                    return "4em";
+                })
+                .attr("y", function(d) 
+                {
+                    return ((height * 2) - ((d * config.scale * 2) - 0.25)) + "em";
+                })
+                .text(function(d) 
+                {
+                    return (d == 0 ? "" : d);
+                });
+            }
+        }
+
+        config.max = d3.max(graphData.cols, function(d) 
+        {
+            var maxStat = d3.max(d.stats, function(x) 
+            {
+                return (x.goals > x.appearances ? x.goals : x.appearances);
+            }
+            );
+
+            return maxStat; 
+        }
+        );
+
+        config.setData();
+
+        d3.select("#ddlYear").on("change", function() { config.setData(); });
+        d3.select("#ddlStat").on("change", function() { config.setData(); });
+        </script>
+    </body>
+</html> 
