@@ -1,2 +1,2 @@
-# d3-barchart
-An animated barchart rendered using D3
+# d3-barchart (in progress)
+An animated bar chart rendered using D3
