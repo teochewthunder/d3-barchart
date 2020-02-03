@@ -31,28 +31,37 @@
             .barScaleSvg
             {
                 width: 5em;
+                height: 20em;
                 float: left;
                 background-color: rgba(0, 255, 0, 0);
             }
 
             .barScaleSvg text
             {
-                fill: rgba(255, 255, 255, 1);
+                fill: rgba(255, 255, 0, 1);
+                text-anchor: end;
                 font-size: 0.5em;
             } 
 
             .barChartSvg
             {
+                width: 20em;
+                height: 20em;
                 float: left;
                 background-color: rgba(0, 0, 255, 0);
             }
 
             .barChartSvg text
             {
-                fill: rgba(255, 255, 255, 1);
+                fill: rgba(255, 255, 0, 1);
                 text-anchor: middle;
                 font-weight: bold;
             }  
+
+            .barChartSvg rect
+            {
+                fill: rgba(255, 255, 0, 1);
+            }
 
             .barFillerSvg
             {
@@ -64,6 +73,7 @@
 
             .barLegendSvg
             {
+                width: 20em;
                 height: 3em;
                 float: left;
                 background-color: rgba(255, 0, 0, 0);
@@ -71,15 +81,10 @@
 
             .barLegendSvg text
             {
-                fill: rgba(255, 255, 255, 1);
+                fill: rgba(255, 255, 0, 1);
                 text-anchor: middle;
                 font-weight: bold;
             }  
-
-            .barChartData
-            {
-                fill: rgba(255, 255, 0, 1);
-            } 
 
             .barChartDataMean
             {
@@ -92,7 +97,13 @@
             {
                 stroke: rgba(255, 255, 0, 1);
                 stroke-width: 1px;
-            }         
+            }   
+
+            .barChartFadedLine
+            {
+                stroke: rgba(255, 255, 0, 0.2);
+                stroke-width: 1px;
+            }       
         </style>
 
         <script src="https://d3js.org/d3.v3.min.js"></script>
@@ -205,8 +216,8 @@
             "scale": 0.5,
             "dataWidth": 10,
             "dataSpacing": 1,
-            "scaleWidth": 5,
-            "legendHeight": 3,
+            "scaleWidth": 6,
+            "legendHeight": 4,
             "max": 0,
             "mean": 0,
             "getChartHeight": function()
@@ -219,8 +230,8 @@
             },
             "setData": function ()
             {
-                var year = d3.select("#ddlYear")[0][0].value;
-                var stat = d3.select("#ddlStat")[0][0].value;
+                var year = d3.select("#ddlYear").node().value;
+                var stat = d3.select("#ddlStat").node().value;
 
                 var dataSet = 
                 {
@@ -246,6 +257,7 @@
                 var scale = d3.select(".barScaleSvg");
                 var chart = d3.select(".barChartSvg");
                 var legend = d3.select(".barLegendSvg");
+                var filler = d3.select(".barFillerSvg");
 
                 var height = config.getChartHeight();
                 var width = config.getChartWidth(graphData.cols.length);
@@ -262,17 +274,17 @@
                     return (height + config.legendHeight) + "em";
                 }); 
 
-                legend
-                .style("height", function(d) 
-                {
-                    return config.legendHeight + "em";
-                }) 
+                scale
                 .style("width", function(d) 
                 {
-                    return width + "em";
-                }) 
-                .html(""); 
-
+                    return config.scaleWidth + "em";
+                })
+                .style("height", function(d) 
+                {
+                    return height + "em";
+                })
+                .html("");
+                
                 chart
                 .style("height", function(d) 
                 {
@@ -284,26 +296,125 @@
                 }) 
                 .html("");
 
-                scale
+                legend
+                .style("height", function(d) 
+                {
+                    return config.legendHeight + "em";
+                }) 
+                .style("width", function(d) 
+                {
+                    return width + "em";
+                }) 
+                .html(""); 
+
+                filler
                 .style("width", function(d) 
                 {
                     return config.scaleWidth + "em";
                 })
                 .style("height", function(d) 
                 {
-                    return height + "em";
+                    return config.legendHeight + "em";
+                });
+
+                var scaleData = [];
+                var unitGrouping = 2;
+                if (config.max > 10) unitGrouping = 5;
+                if (config.max > 20) unitGrouping = 10;
+
+                for (var i = 0; i < (config.max * 1.5); i += unitGrouping)
+                {
+                    scaleData.push(i);
+                }
+
+                scale.selectAll("line")
+                .data(scaleData)
+                .enter()
+                .append("line")
+                .attr("class", function(d) 
+                {
+                    return (d == 0 ? "" : "barChartLine");
+                }) 
+                .attr("x1", function(d) 
+                {
+                    return (config.scaleWidth - 1) + "em";
                 })
-                .html("");
+                .attr("y1", function(d) 
+                {
+                    return (height - (d * config.scale)) + "em";
+                })
+                .attr("x2", function(d) 
+                {
+                    return config.scaleWidth + "em";
+                })
+                .attr("y2", function(d) 
+                {
+                    return (height - (d * config.scale)) + "em";
+                });
+
+                scale.selectAll("text")
+                .data(scaleData)
+                .enter()
+                .append("text")
+                .attr("x", function(d) 
+                {
+                    return (config.scaleWidth + 1) + "em";
+                })
+                .attr("y", function(d) 
+                {
+                    return ((height * 2) - ((d * config.scale * 2) - 0.25)) + "em";
+                })
+                .text(function(d) 
+                {
+                    return (d == 0 ? "" : d);
+                });
+
+                scale
+                .append("line")
+                .attr("class", "barChartLine")
+                .attr("x1", function(d) 
+                {
+                    return config.scaleWidth + "em";
+                })
+                .attr("y1", function(d) 
+                {
+                    return "0em";
+                })
+                .attr("x2", function(d) 
+                {
+                    return config.scaleWidth + "em";
+                })
+                .attr("y2", function(d) 
+                {
+                    return height + "em";
+                });
+
+                chart.selectAll("line")
+                .data(scaleData)
+                .enter()
+                .append("line")
+                .attr("class", "barChartFadedLine")
+                .attr("x1", function(d) 
+                {
+                    return "0em";
+                })
+                .attr("y1", function(d) 
+                {
+                    return (height - (d * config.scale)) + "em";
+                })
+                .attr("x2", function(d) 
+                {
+                    return width + "em";
+                })
+                .attr("y2", function(d) 
+                {
+                    return (height - (d * config.scale)) + "em";
+                });
 
                 chart.selectAll("rect")
                 .data(dataSet.stats)
                 .enter()
                 .append("rect")
-                .attr("class", "barChartData")
-                .attr("width", function(d) 
-                {
-                    return (config.dataWidth) + "em";
-                })
                 .attr("x", function(d, i) 
                 {
                     return ((i * (config.dataWidth + config.dataSpacing)) + 2) + "em";
@@ -312,7 +423,15 @@
                 {
                     return height + "em";
                 })
-                .transition()
+                .attr("width", function(d) 
+                {
+                    return (config.dataWidth) + "em";
+                })
+                .attr("height", function(d) 
+                {
+                    return "0em";
+                })            
+               .transition()
                 .duration(500)
                 .attr("y", function(d) 
                 {
@@ -327,7 +446,6 @@
                 .data(dataSet.stats)
                 .enter()
                 .append("text")
-                .attr("class", "barChartDataText")
                 .attr("x", function(d, i) 
                 {
                     return ((i * (config.dataWidth + config.dataSpacing)) + 2 + (config.dataWidth / 2)) + "em";
@@ -361,6 +479,23 @@
                     return (height - (config.mean * config.scale)) + "em";
                 });
 
+                legend.selectAll("text")
+                .data(dataSet.labels)
+                .enter()
+                .append("text")
+                .attr("x", function(d, i) 
+                {
+                    return ((i * (config.dataWidth + config.dataSpacing)) + 2 + (config.dataWidth / 2)) + "em";
+                })
+                .attr("y", function(d) 
+                {
+                    return config.dataSpacing + "em";
+                })
+                .text(function(d) 
+                {
+                    return d;
+                });
+
                 legend
                 .append("line")
                 .attr("class", "barChartLine")
@@ -379,94 +514,6 @@
                 .attr("y2", function(d) 
                 {
                     return "0em";
-                });
-
-                legend.selectAll("text")
-                .data(dataSet.labels)
-                .enter()
-                .append("text")
-                .attr("class", "barChartDataText")
-                .attr("x", function(d, i) 
-                {
-                    return ((i * (config.dataWidth + config.dataSpacing)) + 2 + (config.dataWidth / 2)) + "em";
-                })
-                .attr("y", function(d) 
-                {
-                    return config.dataSpacing + "em";
-                })
-                .text(function(d) 
-                {
-                    return d;
-                });
-
-                scale
-                .append("line")
-                .attr("class", "barChartLine")
-                .attr("x1", function(d) 
-                {
-                    return config.scaleWidth + "em";
-                })
-                .attr("y1", function(d) 
-                {
-                    return "0em";
-                })
-                .attr("x2", function(d) 
-                {
-                    return config.scaleWidth + "em";
-                })
-                .attr("y2", function(d) 
-                {
-                    return height + "em";
-                });
-
-                var scaleData = [];
-                var unitGrouping = 2;
-                if (config.max > 10) unitGrouping = 5;
-                if (config.max > 20) unitGrouping = 10;
-
-                for (var i = 0; i < (config.max * 1.5); i += unitGrouping)
-                {
-                    scaleData.push(i);
-                }
-
-                scale.selectAll("line")
-                .data(scaleData)
-                .enter()
-                .append("line")
-                .attr("class", "barChartLine")
-                .attr("x1", function(d) 
-                {
-                    return (config.scaleWidth - 1) + "em";
-                })
-                .attr("y1", function(d) 
-                {
-                    return (height - (d * config.scale)) + "em";
-                })
-                .attr("x2", function(d) 
-                {
-                    return config.scaleWidth + "em";
-                })
-                .attr("y2", function(d) 
-                {
-                    return (height - (d * config.scale)) + "em";
-                });
-
-                scale.selectAll("text")
-                .data(scaleData)
-                .enter()
-                .append("text")
-                .attr("class", "barChartDataText")
-                .attr("x", function(d) 
-                {
-                    return (config.scaleWidth - 1) + "em";
-                })
-                .attr("y", function(d) 
-                {
-                    return ((height * 2) - ((d * config.scale * 2) - 0.25)) + "em";
-                })
-                .text(function(d) 
-                {
-                    return (d == 0 ? "" : d);
                 });
             }
         };
