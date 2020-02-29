@@ -241,7 +241,7 @@
 
                 for (var i = 0; i < graphData.cols.length; i++)
                 {
-                    var filtered = graphData.cols[i].stats.filter(function(x) { return x.year == year;})
+                    var filtered = graphData.cols[i].stats.filter(function(x) { return x.year == year;});
 
                     if (filtered.length > 0)
                     {
