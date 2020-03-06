@@ -13,10 +13,10 @@ This is in turn split into four SVGs
 - *filler* is the space bottom of *scale* and left of *legend*. It is merely meant to help align the chart.
 - *legend* holds the data labels. Tags inserted are text.
 - Other notes...
--- width of *chart* and *legend* should be equal.
--- height of *scale* and *chart* should be equal.
--- width of *scale* and "filler* should be equal.
--- height of *filler* and *legend* should be equal.
+  - width of *chart* and *legend* should be equal.
+  - height of *scale* and *chart* should be equal.
+  - width of *scale* and "filler* should be equal.
+  - height of *filler* and *legend* should be equal.
 
 ## JavaScript
 The script is mainly split into two parts - *graphData* and *config*.
